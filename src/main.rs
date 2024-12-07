@@ -1,32 +1,26 @@
-use anyhow::{Error as AnyError, Ok};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 use kick_server_cli::process;
 use kick_server_cli::setup_option::SetupOption;
-use std::path::PathBuf;
+use std::io::{self, Write};
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(
+    version,
+    about = "Kick Server CLI",
+    long_about = "specialize in connecting and managing kickserver"
+)]
 struct Cli {
-    /// Optional name to operate on
-    name: Option<String>,
-
-    /// Sets a custom config file
-    #[arg(short, long, value_name = "FILE")]
-    config: Option<PathBuf>,
-
-    /// Turn debugging information on
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    debug: u8,
-
     #[command(subcommand)]
     command: Option<SubCommand>,
 }
 
 #[derive(Subcommand, Debug)]
 enum SubCommand {
-    #[command(version, about, long_about = None)]
+    /// Initialize a new kickserver by config.yaml
+    #[command(version, about = "Setup a new kickserver")]
     Setup(SetupOption),
 }
-fn main() -> Result<(), AnyError> {
+fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
         Some(SubCommand::Setup(setup)) => {
@@ -34,9 +28,20 @@ fn main() -> Result<(), AnyError> {
             for value in values {
                 println!("{:?}", value);
             }
+            todo!()
         }
         None => {
-            println!("No subcommand");
+            let mut stdout = io::stdout();
+            loop {
+                print!("kkcli=>");
+                stdout.flush()?;
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+                let input = input.trim();
+                if input == "exit" {
+                    break;
+                }
+            }
         }
     }
     Ok(())
