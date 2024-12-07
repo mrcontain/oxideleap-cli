@@ -1,7 +1,9 @@
+use anyhow::{Error as AnyError, Ok};
 use clap::{Parser, Subcommand};
+use kick_server_cli::process;
 use kick_server_cli::setup_option::SetupOption;
 use std::path::PathBuf;
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
     /// Optional name to operate on
@@ -19,11 +21,23 @@ struct Cli {
     command: Option<SubCommand>,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum SubCommand {
     #[command(version, about, long_about = None)]
     Setup(SetupOption),
 }
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<(), AnyError> {
+    let args = Cli::parse();
+    match args.command {
+        Some(SubCommand::Setup(setup)) => {
+            let values = process::process_yaml(setup.file)?;
+            for value in values {
+                println!("{:?}", value);
+            }
+        }
+        None => {
+            println!("No subcommand");
+        }
+    }
+    Ok(())
 }
