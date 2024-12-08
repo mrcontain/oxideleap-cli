@@ -1,8 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::*;
-use kick_server_cli::process;
-use kick_server_cli::setup_option::SetupOption;
+use oxideleap_cli::process;
+use oxideleap_cli::setup_option::SetupOption;
 use std::io::{self, Write};
 #[derive(Parser, Debug)]
 #[command(
