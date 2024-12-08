@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use colored::*;
 use kick_server_cli::process;
 use kick_server_cli::setup_option::SetupOption;
 use std::io::{self, Write};
@@ -10,6 +11,14 @@ use std::io::{self, Write};
     long_about = "specialize in connecting and managing kickserver"
 )]
 struct Cli {
+    /// input the username
+    #[arg(short, long, value_name = "USERNAME")]
+    user: String,
+
+    /// input the password
+    #[arg(short, long)]
+    password: String,
+
     #[command(subcommand)]
     command: Option<SubCommand>,
 }
@@ -32,8 +41,17 @@ fn main() -> Result<()> {
         }
         None => {
             let mut stdout = io::stdout();
+            // todo: following need to query the database and verify the username and password
+            // let password = args.password;
             loop {
-                print!("kkcli=>");
+                print!(
+                    "{}{}{}{}{}",
+                    "kickserver".blue(),
+                    "(".yellow(),
+                    args.user.purple(),
+                    ")".yellow(),
+                    "=>".green()
+                );
                 stdout.flush()?;
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;

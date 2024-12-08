@@ -7,7 +7,7 @@ pub struct SetupOption {
     #[arg(
         short,
         long,
-        value_name = "FILE",
+        value_name = "INPUT_FILE",
         default_value = "/etc/kickserver/config.yaml"
     )]
     pub file: PathBuf,
