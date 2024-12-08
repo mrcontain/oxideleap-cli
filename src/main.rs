@@ -40,19 +40,19 @@ fn main() -> Result<()> {
             todo!()
         }
         None => {
+            let cli_header = format!(
+                "{}{}{}{}{}",
+                "kickserver".blue(),
+                "(".yellow(),
+                args.user.purple(),
+                ")".yellow(),
+                "=>".green()
+            );
             let mut stdout = io::stdout();
             // todo: following need to query the database and verify the username and password
             // let password = args.password;
             loop {
-                print!(
-                    "{}{}{}{}{}",
-                    "kickserver".blue(),
-                    "(".yellow(),
-                    args.user.purple(),
-                    ")".yellow(),
-                    "=>".green()
-                );
-                stdout.flush()?;
+                print_with_anyoutput(&cli_header, &mut stdout)?;
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
                 let input = input.trim();
@@ -62,5 +62,11 @@ fn main() -> Result<()> {
             }
         }
     }
+    Ok(())
+}
+
+fn print_with_anyoutput<T: Write>(cli_header: &str, output: &mut T) -> Result<()> {
+    output.write_all(cli_header.as_bytes())?;
+    output.flush()?;
     Ok(())
 }
