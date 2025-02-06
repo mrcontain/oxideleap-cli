@@ -1,36 +1,46 @@
+/*
+ * @Author: mrcontain 1916985079@qq.com
+ * @Date: 2024-12-07 12:40:35
+ * @LastEditors: mrcontain 1916985079@qq.com
+ * @LastEditTime: 2025-02-06 10:26:02
+ * @FilePath: \oxideleap-cli\src\main.rs
+ * @Description:
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
+ */
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use colored::*;
-use oxideleap_cli::process;
-use oxideleap_cli::setup_option::SetupOption;
-use std::io::{self, Write};
-#[derive(Parser, Debug)]
-#[command(
-    version,
-    about = "Kick Server CLI",
-    long_about = "specialize in connecting and managing kickserver"
-)]
-struct Cli {
-    /// input the username
-    #[arg(short, long, value_name = "USERNAME")]
-    user: String,
+use oxideleap_cli::process::process_yaml;
+use oxideleap_cli::{print, process};
+use oxideleap_cli::{Cli, SubCommand};
+use std::io;
+use std::path::PathBuf;
+use std::process::exit;
 
-    /// input the password
-    #[arg(short, long)]
-    password: String,
+const USER_CONFIG_PATH: &str = "assets/test.yaml";
+// const USER_CONFIG_PATH: &str = "/etc/oxideleap-client/config.yaml";
 
-    #[command(subcommand)]
-    command: Option<SubCommand>,
-}
-
-#[derive(Subcommand, Debug)]
-enum SubCommand {
-    /// Initialize a new kickserver by config.yaml
-    #[command(version, about = "Setup a new kickserver")]
-    Setup(SetupOption),
-}
 fn main() -> Result<()> {
-    let args = Cli::parse();
+    let mut args = Cli::parse();
+    // judge username and password whether already input
+    if args.user.is_none() && args.password.is_none() {
+        let values = process_yaml(PathBuf::from(USER_CONFIG_PATH))?;
+        args.user = values[0]["username"]
+            .as_str()
+            .map(|s| s.to_string())
+            .or_else(|| {
+                eprintln!("username is not set in the config file");
+                exit(1);
+            });
+        args.password = values[0]["password"]
+            .as_str()
+            .map(|s| s.to_string())
+            .or_else(|| {
+                eprintln!("password is not set in the config file");
+                exit(1);
+            });
+    }
     match args.command {
         Some(SubCommand::Setup(setup)) => {
             let values = process::process_yaml(setup.file)?;
@@ -39,34 +49,53 @@ fn main() -> Result<()> {
             }
             todo!()
         }
+        Some(_) => {
+            // Handle the Connect command
+            println!("invalid arguments");
+        }
         None => {
             let cli_header = format!(
                 "{}{}{}{}{}",
-                "kickserver".blue(),
+                "OL-cli".blue(),
                 "(".yellow(),
-                args.user.purple(),
+                args.user.unwrap().purple(),
                 ")".yellow(),
                 "=>".green()
             );
             let mut stdout = io::stdout();
-            // todo: following need to query the database and verify the username and password
+            // TODO: following need to query the database and verify the username and password
             // let password = args.password;
             loop {
-                print_with_anyoutput(&cli_header, &mut stdout)?;
+                print::print_with_anyoutput(&cli_header, &mut stdout)?;
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
                 let input = input.trim();
                 if input == "exit" {
                     break;
                 }
+
+                // 解析用户输入的命令
+                let input_args = format!("oxideleap-cli {}", input);
+                let input_cli = Cli::try_parse_from(input_args.split_whitespace());
+
+                match input_cli {
+                    Ok(cli) => match cli.command {
+                        Some(SubCommand::Setup { .. }) => {
+                            println!("The 'setup' command is not allowed in interactive mode.");
+                        }
+                        Some(_) => {
+                            println!("Unknown command");
+                        }
+                        None => {
+                            // do nothing
+                        }
+                    },
+                    Err(err) => {
+                        eprintln!("{}", err);
+                    }
+                }
             }
         }
     }
-    Ok(())
-}
-
-fn print_with_anyoutput<T: Write>(cli_header: &str, output: &mut T) -> Result<()> {
-    output.write_all(cli_header.as_bytes())?;
-    output.flush()?;
     Ok(())
 }

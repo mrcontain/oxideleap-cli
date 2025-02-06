@@ -5,8 +5,8 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 /**
- * @description:
- * @param {PathBuf} file_path
+ * @description: read the yaml file and return the values
+ * @param {PathBuf} file_path yaml's filepath
  * @return {anyhow::Result<Vec<Value>>}
  */
 pub fn process_yaml(file_path: PathBuf) -> Result<Vec<Value>> {
